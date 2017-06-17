@@ -265,7 +265,7 @@ OMXNodeInstance::OMXNodeInstance(
     mSecureBufferType[0] = kSecureBufferTypeUnknown;
     mSecureBufferType[1] = kSecureBufferTypeUnknown;
     mIsSecure = AString(name).endsWith(".secure");
-    atomic_store(&mDying, false);
+//    atomic_store(&mDying, false);
 }
 
 OMXNodeInstance::~OMXNodeInstance() {
@@ -322,7 +322,7 @@ status_t OMXNodeInstance::freeNode(OMXMaster *master) {
     // The code below may trigger some more events to be dispatched
     // by the OMX component - we want to ignore them as our client
     // does not expect them.
-    atomic_store(&mDying, true);
+//    atomic_store(&mDying, true);
 
     OMX_STATETYPE state;
     CHECK_EQ(OMX_GetState(mHandle, &state), OMX_ErrorNone);
@@ -1910,8 +1910,8 @@ void OMXNodeInstance::onObserverDied(OMXMaster *master) {
 
     // Try to force shutdown of the node and hope for the best.
     // But allow the component to observe mDying = true first
-    atomic_store(&mDying, true);
-    sleep(2);
+//    atomic_store(&mDying, true);
+//    sleep(2);
     freeNode(master);
 }
 
@@ -1991,7 +1991,7 @@ OMX_ERRORTYPE OMXNodeInstance::OnEvent(
         return OMX_ErrorBadParameter;
     }
     OMXNodeInstance *instance = static_cast<OMXNodeInstance *>(pAppData);
-    if (atomic_load(&instance->mDying)) {
+    if (instance->mDying) {
         return OMX_ErrorNone;
     }
     return instance->owner()->OnEvent(
@@ -2008,7 +2008,7 @@ OMX_ERRORTYPE OMXNodeInstance::OnEmptyBufferDone(
         return OMX_ErrorBadParameter;
     }
     OMXNodeInstance *instance = static_cast<OMXNodeInstance *>(pAppData);
-    if (atomic_load(&instance->mDying)) {
+    if (instance->mDying) {
         return OMX_ErrorNone;
     }
     int fenceFd = instance->retrieveFenceFromMeta_l(pBuffer, kPortIndexOutput);
@@ -2026,7 +2026,7 @@ OMX_ERRORTYPE OMXNodeInstance::OnFillBufferDone(
         return OMX_ErrorBadParameter;
     }
     OMXNodeInstance *instance = static_cast<OMXNodeInstance *>(pAppData);
-    if (atomic_load(&instance->mDying)) {
+    if (instance->mDying) {
         return OMX_ErrorNone;
     }
     int fenceFd = instance->retrieveFenceFromMeta_l(pBuffer, kPortIndexOutput);
